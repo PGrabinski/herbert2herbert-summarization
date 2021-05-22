@@ -1,0 +1,1 @@
+Summarization of Polish newsfeed using seq2seq model based on Herbert model.
