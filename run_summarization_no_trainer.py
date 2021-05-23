@@ -109,7 +109,7 @@ def parse_args():
     parser.add_argument(
         "--max_source_length",
         type=int,
-        default=1024,
+        default=480,
         help="The maximum total input sequence length after "
         "tokenization.Sequences longer than this will be truncated, sequences shorter will be padded.",
     )
@@ -364,8 +364,13 @@ def main():
     else:
         logger.info("Training new model from scratch")
         model = AutoModelForSeq2SeqLM.from_config(config)
-
-    model.resize_token_embeddings(len(tokenizer))
+    if isinstance(model, transformers.EncoderDecoderModel):
+        model.encoder.resize_token_embeddings(len(tokenizer))
+        model.decoder.resize_token_embeddings(len(tokenizer))
+    else:
+        model.resize_token_embeddings(len(tokenizer))
+    # except:
+    #     print(type(model))
     if model.config.decoder_start_token_id is None:
         raise ValueError("Make sure that `config.decoder_start_token_id` is correctly defined")
 
@@ -509,7 +514,11 @@ def main():
     for epoch in range(args.num_train_epochs):
         model.train()
         for step, batch in enumerate(train_dataloader):
-            outputs = model(**batch)
+            batch_unpacked = {**batch}
+            print(type(batch), batch_unpacked.keys(), batch_unpacked['input_ids'].shape, batch_unpacked['labels'].shape)
+            outputs = model(input_ids=batch_unpacked['input_ids'], decoder_input_ids=batch_unpacked['input_ids'],
+                            attention_mask=batch_unpacked['attention_mask'],
+                            labels=batch_unpacked['labels'])
             loss = outputs.loss
             loss = loss / args.gradient_accumulation_steps
             accelerator.backward(loss)
