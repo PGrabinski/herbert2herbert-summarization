@@ -9,8 +9,11 @@ __pycache__/
 *$py.class
 
 # Model .bin file
-
 models/allegro_seq2seq/
+
+# Checkpoints
+checkpoint-*/
+
 # C extensions
 *.so
 

@@ -1,0 +1,8 @@
+torch~=1.8.1+cu111
+nltk~=3.6.2
+numpy~=1.19.2
+transformers~=4.7.0.dev0
+datasets~=1.6.2
+filelock~=3.0.12
+tqdm~=4.49.0
+accelerate~=0.3.0

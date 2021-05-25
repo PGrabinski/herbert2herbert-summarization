@@ -337,33 +337,42 @@ def main():
     #
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
-    if args.config_name:
-        config = AutoConfig.from_pretrained(args.config_name)
-    elif args.model_name_or_path:
-        config = AutoConfig.from_pretrained(args.model_name_or_path)
-    else:
-        config = CONFIG_MAPPING[args.model_type]()
-        logger.warning("You are instantiating a new config instance from scratch.")
 
-    if args.tokenizer_name:
-        tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name, use_fast=not args.use_slow_tokenizer)
-    elif args.model_name_or_path:
-        tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, use_fast=not args.use_slow_tokenizer)
-    else:
-        raise ValueError(
-            "You are instantiating a new tokenizer from scratch. This is not supported by this script."
-            "You can do it from another script, save it, and load it from here, using --tokenizer_name."
-        )
+    # COMMENTED OUT FOR CONVENIENCE - START
 
-    if args.model_name_or_path:
-        model = AutoModelForSeq2SeqLM.from_pretrained(
-            args.model_name_or_path,
-            from_tf=bool(".ckpt" in args.model_name_or_path),
-            config=config,
-        )
-    else:
-        logger.info("Training new model from scratch")
-        model = AutoModelForSeq2SeqLM.from_config(config)
+    # if args.config_name:
+    #     config = AutoConfig.from_pretrained(args.config_name)
+    # elif args.model_name_or_path:
+    #     config = AutoConfig.from_pretrained(args.model_name_or_path)
+    # else:
+    #     config = CONFIG_MAPPING[args.model_type]()
+    #     logger.warning("You are instantiating a new config instance from scratch.")
+    #
+    # if args.tokenizer_name:
+    #     tokenizer = AutoTokenizer.from_pretrained(args.tokenizer_name, use_fast=not args.use_slow_tokenizer)
+    # elif args.model_name_or_path:
+    #     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, use_fast=not args.use_slow_tokenizer)
+    # else:
+    #     raise ValueError(
+    #         "You are instantiating a new tokenizer from scratch. This is not supported by this script."
+    #         "You can do it from another script, save it, and load it from here, using --tokenizer_name."
+    #     )
+    #
+    # if args.model_name_or_path:
+    #     model = AutoModelForSeq2SeqLM.from_pretrained(
+    #         args.model_name_or_path,
+    #         from_tf=bool(".ckpt" in args.model_name_or_path),
+    #         config=config,
+    #     )
+    # else:
+    #     logger.info("Training new model from scratch")
+    #     model = AutoModelForSeq2SeqLM.from_config(config)
+
+    # COMMENTED OUT FOR CONVENIENCE - END
+    model = transformers.EncoderDecoderModel.from_encoder_decoder_pretrained('bert-base-uncased', 'bert-base-uncased')
+    tokenizer = transformers.BertTokenizer.from_pretrained('bert-base-uncased')
+    model.config.decoder_start_token_id = 14111
+
     if isinstance(model, transformers.EncoderDecoderModel):
         model.encoder.resize_token_embeddings(len(tokenizer))
         model.decoder.resize_token_embeddings(len(tokenizer))
@@ -371,6 +380,7 @@ def main():
         model.resize_token_embeddings(len(tokenizer))
     # except:
     #     print(type(model))
+
     if model.config.decoder_start_token_id is None:
         raise ValueError("Make sure that `config.decoder_start_token_id` is correctly defined")
 
@@ -431,8 +441,9 @@ def main():
     eval_dataset = processed_datasets["validation"]
 
     # Log a few random samples from the training set:
-    for index in random.sample(range(len(train_dataset)), 1):
-        logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
+    # COMMENTED OUT FOR CONVENIENCE
+    # for index in random.sample(range(len(train_dataset)), 1):
+    #     logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
 
     label_pad_token_id = -100 if args.ignore_pad_token_for_loss else tokenizer.pad_token_id
     data_collator = DataCollatorForSeq2Seq(
@@ -531,7 +542,7 @@ def main():
 
             if completed_steps >= args.max_train_steps:
                 break
-
+            # print()
         model.eval()
         if args.val_max_target_length is None:
             args.val_max_target_length = args.max_target_length
