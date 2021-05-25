@@ -34,8 +34,8 @@ train_data = datasets.load_dataset(dataset_name, '3.0.0', split='train')
 val_data = datasets.load_dataset(dataset_name, '3.0.0', split='validation')
 
 # Preprocessing - mindlessly pasted
-batch_size = 1  # change to 16 for full training
-encoder_max_length = 256
+batch_size = 16  # change to 16 for full training
+encoder_max_length = 512
 decoder_max_length = 128
 
 
@@ -73,7 +73,7 @@ train_data.set_format(
 )
 
 # only use 16 training examples for notebook - DELETE LINE FOR FULL TRAINING
-val_data = val_data.select(range(16))
+# val_data = val_data.select(range(16))
 
 val_data = val_data.map(
     process_data_to_model_inputs,
@@ -152,7 +152,7 @@ training_args = transformers.Seq2SeqTrainingArguments(
     # overwrite_output_dir=True,
     save_total_limit=3,
     # fp16=True,
-    no_cuda=True
+    # no_cuda=True
 )
 
 # instantiate trainer
@@ -174,7 +174,7 @@ test_data = datasets.load_dataset("cnn_dailymail", "3.0.0", split="test")
 # only use 16 training examples for notebook - DELETE LINE FOR FULL TRAINING
 # test_data = test_data.select(range(16))
 
-batch_size = 16  # change to 64 for full evaluation
+batch_size = 64  # change to 64 for full evaluation
 
 
 # map data correctly
