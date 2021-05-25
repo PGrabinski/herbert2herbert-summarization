@@ -212,15 +212,22 @@ trainer = transformers.Seq2SeqTrainer(
 trainer.train()
 
 tokenizer = transformers.BertTokenizer.from_pretrained(model_name)
-model = transformers.EncoderDecoderModel.from_pretrained("./checkpoint-16")
-model.to("cuda")
+
+check_gpu_usage()
+
+# model = transformers.EncoderDecoderModel.from_pretrained("./checkpoint-16")
+# model.to("cuda")
+
+# check_gpu_usage()
+
+model = bert2bert
 
 test_data = datasets.load_dataset("cnn_dailymail", "3.0.0", split="test")
 
 # only use 16 training examples for notebook - DELETE LINE FOR FULL TRAINING
 # test_data = test_data.select(range(16))
 
-batch_size = 64  # change to 64 for full evaluation
+batch_size = 16  # change to 64 for full evaluation
 
 
 # map data correctly
