@@ -5,6 +5,42 @@ import datasets
 from dataclasses import dataclass, field
 from typing import Optional
 
+
+def check_gpu_usage():
+    def extract(elem, tag, drop_s):
+        text = elem.find(tag).text
+        if drop_s not in text: raise Exception(text)
+        text = text.replace(drop_s, "")
+        try:
+            return int(text)
+        except ValueError:
+            return float(text)
+
+    i = 0
+
+    d = OrderedDict()
+    d["time"] = time.time()
+
+    cmd = ['nvidia-smi', '-q', '-x']
+    cmd_out = subprocess.check_output(cmd)
+    gpu = xml.etree.ElementTree.fromstring(cmd_out).find("gpu")
+
+    util = gpu.find("utilization")
+    d["gpu_util"] = extract(util, "gpu_util", "%")
+
+    d["mem_used"] = extract(gpu.find("fb_memory_usage"), "used", "MiB")
+    d["mem_used_per"] = d["mem_used"] * 100 / 11171
+
+    if d["gpu_util"] < 15 and d["mem_used"] < 2816:
+        msg = 'GPU status: Idle \n'
+    else:
+        msg = 'GPU status: Busy \n'
+
+    now = time.strftime("%c")
+    print('\n\nUpdated at %s\n\nGPU utilization: %s %%\nVRAM used: %s %%\n\n%s\n\n' % (
+        now, d["gpu_util"], d["mem_used_per"], msg))
+
+
 # Input chosen model name
 model_name = 'bert-base-uncased'
 
@@ -38,6 +74,8 @@ batch_size = 16  # change to 16 for full training
 encoder_max_length = 512
 decoder_max_length = 128
 
+check_gpu_usage()
+
 
 def process_data_to_model_inputs(batch):
     # tokenize the inputs and labels
@@ -60,7 +98,7 @@ def process_data_to_model_inputs(batch):
 
 # IMPORTANT SOON
 # only use 32 training examples for notebook - DELETE LINE FOR FULL TRAINING
-train_data = train_data.select(range(32))
+# train_data = train_data.select(range(32))
 
 train_data = train_data.map(
     process_data_to_model_inputs,
@@ -144,14 +182,18 @@ training_args = transformers.Seq2SeqTrainingArguments(
     # evaluate_during_training=True,
     do_train=True,
     do_eval=True,
-    logging_steps=2,  # set to 1000 for full training
-    save_steps=16,  # set to 500 for full training
-    eval_steps=4,  # set to 8000 for full training
-    warmup_steps=1,  # set to 2000 for full training
+    # logging_steps=2,  # set to 1000 for full training
+    # save_steps=16,  # set to 500 for full training
+    # eval_steps=4,  # set to 8000 for full training
+    # warmup_steps=1,  # set to 2000 for full training
+    logging_steps=1000,  # set to 1000 for full training
+    save_steps=500,  # set to 500 for full training
+    eval_steps=8000,  # set to 8000 for full training
+    warmup_steps=2000,  # set to 2000 for full training
     # max_steps=16,  # delete for full training
     # overwrite_output_dir=True,
     save_total_limit=3,
-    # fp16=True,
+    fp16=True,
     # no_cuda=True
 )
 
