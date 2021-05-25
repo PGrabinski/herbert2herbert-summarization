@@ -4,7 +4,10 @@ import datasets
 # from seq2seq_trainer import Seq2SeqTrainer
 from dataclasses import dataclass, field
 from typing import Optional
-
+from collections import OrderedDictjson
+import subprocess
+import time
+import xml.etree.ElementTree
 
 def check_gpu_usage():
     def extract(elem, tag, drop_s):
@@ -207,7 +210,7 @@ trainer = transformers.Seq2SeqTrainer(
 )
 trainer.train()
 
-tokenizer = transformers.BertTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = transformers.BertTokenizer.from_pretrained(model_name)
 model = transformers.EncoderDecoderModel.from_pretrained("./checkpoint-16")
 model.to("cuda")
 
