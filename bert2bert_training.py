@@ -102,7 +102,7 @@ def process_data_to_model_inputs(batch):
 
 # IMPORTANT SOON
 # only use 32 training examples for notebook - DELETE LINE FOR FULL TRAINING
-# train_data = train_data.select(range(32))
+train_data = train_data.select(range(32))
 
 train_data = train_data.map(
     process_data_to_model_inputs,
@@ -115,7 +115,7 @@ train_data.set_format(
 )
 
 # only use 16 training examples for notebook - DELETE LINE FOR FULL TRAINING
-# val_data = val_data.select(range(16))
+val_data = val_data.select(range(16))
 
 val_data = val_data.map(
     process_data_to_model_inputs,
