@@ -211,48 +211,6 @@ trainer = transformers.Seq2SeqTrainer(
 )
 trainer.train()
 
-tokenizer = transformers.BertTokenizer.from_pretrained(model_name)
 
 check_gpu_usage()
 
-# model = transformers.EncoderDecoderModel.from_pretrained("./checkpoint-16")
-# model.to("cuda")
-
-# check_gpu_usage()
-
-model = bert2bert
-
-test_data = datasets.load_dataset("cnn_dailymail", "3.0.0", split="test")
-
-# only use 16 training examples for notebook - DELETE LINE FOR FULL TRAINING
-# test_data = test_data.select(range(16))
-
-batch_size = 16  # change to 64 for full evaluation
-
-
-# map data correctly
-def generate_summary(batch):
-    # Tokenizer will automatically set [BOS] <text> [EOS]
-    # cut off at BERT max length 512
-    inputs = tokenizer(batch["article"], padding="max_length", truncation=True, max_length=512, return_tensors="pt")
-    input_ids = inputs.input_ids.to("cuda")
-    attention_mask = inputs.attention_mask.to("cuda")
-
-    outputs = model.generate(input_ids, attention_mask=attention_mask)
-
-    # all special tokens including will be removed
-    output_str = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-
-    batch["pred"] = output_str
-
-    return batch
-
-
-results = test_data.map(generate_summary, batched=True, batch_size=batch_size, remove_columns=["article"])
-
-pred_str = results["pred"]
-label_str = results["highlights"]
-
-rouge_output = rouge.compute(predictions=pred_str, references=label_str, rouge_types=["rouge2"])["rouge2"].mid
-
-print(rouge_output)
