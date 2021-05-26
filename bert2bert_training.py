@@ -74,7 +74,7 @@ train_data = datasets.load_dataset(dataset_name, '3.0.0', split='train')
 val_data = datasets.load_dataset(dataset_name, '3.0.0', split='validation')
 
 # Preprocessing - mindlessly pasted
-batch_size = 16  # change to 16 for full training
+batch_size = 8  # change to 16 for full training
 encoder_max_length = 512
 decoder_max_length = 128
 
@@ -179,11 +179,10 @@ def compute_metrics(pred):
 
 
 training_args = transformers.Seq2SeqTrainingArguments(
-    output_dir="./",
+    output_dir="./checkpoints/",
     per_device_train_batch_size=batch_size,
     per_device_eval_batch_size=batch_size,
     predict_with_generate=True,
-    # evaluate_during_training=True,
     do_train=True,
     do_eval=True,
     # logging_steps=2,  # set to 1000 for full training
@@ -192,8 +191,9 @@ training_args = transformers.Seq2SeqTrainingArguments(
     # warmup_steps=1,  # set to 2000 for full training
     logging_steps=1000,  # set to 1000 for full training
     save_steps=500,  # set to 500 for full training
-    eval_steps=8000,  # set to 8000 for full training
+    eval_steps=16000,  # set to 8000 for full training
     warmup_steps=2000,  # set to 2000 for full training
+    evaluation_strategy='steps',
     # max_steps=16,  # delete for full training
     # overwrite_output_dir=True,
     save_total_limit=3,
