@@ -13,7 +13,7 @@ import xml.etree.ElementTree
 model_name = 'bert-base-uncased'
 tokenizer = transformers.BertTokenizer.from_pretrained(model_name)
 
-model = transformers.EncoderDecoderModel.from_pretrained("./checkpoint-16")
+model = transformers.EncoderDecoderModel.from_pretrained("./checkpoints/checkpoint-100")
 model.to("cuda")
 
 
@@ -36,11 +36,12 @@ def check_gpu_usage():
     cmd_out = subprocess.check_output(cmd)
     gpu = xml.etree.ElementTree.fromstring(cmd_out).find("gpu")
 
+    total_memory = torch.cuda.get_device_properties(device='cuda').total_memory / 1e6
     util = gpu.find("utilization")
     d["gpu_util"] = extract(util, "gpu_util", "%")
 
     d["mem_used"] = extract(gpu.find("fb_memory_usage"), "used", "MiB")
-    d["mem_used_per"] = d["mem_used"] * 100 / 11171
+    d["mem_used_per"] = d["mem_used"] * 100 / total_memory  # 11171
 
     if d["gpu_util"] < 15 and d["mem_used"] < 2816:
         msg = 'GPU status: Idle \n'
@@ -50,6 +51,7 @@ def check_gpu_usage():
     now = time.strftime("%c")
     print('\n\nUpdated at %s\n\nGPU utilization: %s %%\nVRAM used: %s %%\n\n%s\n\n' % (
         now, d["gpu_util"], d["mem_used_per"], msg))
+    print(f'Total ram available: {total_memory} MBs')
 
 
 check_gpu_usage()
@@ -88,12 +90,13 @@ def generate_summary(batch):
     # Tokenizer will automatically set [BOS] <text> [EOS]
     # cut off at BERT max length 512
     inputs = tokenizer(batch["article"], padding="max_length", truncation=True, max_length=512, return_tensors="pt")
-    input_ids = inputs.input_ids.to("cuda")
-    attention_mask = inputs.attention_mask.to("cuda")
+    with torch.no_grad():
+        input_ids = inputs.input_ids.to("cuda")
+        attention_mask = inputs.attention_mask.to("cuda")
 
-    outputs = model.generate(input_ids, attention_mask=attention_mask)
+        outputs = model.generate(input_ids, attention_mask=attention_mask)
 
-    # all special tokens including will be removed
+        # all special tokens including will be removed
     output_str = tokenizer.batch_decode(outputs, skip_special_tokens=True)
 
     batch["pred"] = output_str

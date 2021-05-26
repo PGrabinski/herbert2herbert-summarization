@@ -29,11 +29,12 @@ def check_gpu_usage():
     cmd_out = subprocess.check_output(cmd)
     gpu = xml.etree.ElementTree.fromstring(cmd_out).find("gpu")
 
+    total_memory = torch.cuda.get_device_properties(device='cuda').total_memory / 1e6
     util = gpu.find("utilization")
     d["gpu_util"] = extract(util, "gpu_util", "%")
 
     d["mem_used"] = extract(gpu.find("fb_memory_usage"), "used", "MiB")
-    d["mem_used_per"] = d["mem_used"] * 100 / 11171
+    d["mem_used_per"] = d["mem_used"] * 100 / total_memory  # 11171
 
     if d["gpu_util"] < 15 and d["mem_used"] < 2816:
         msg = 'GPU status: Idle \n'
@@ -43,6 +44,7 @@ def check_gpu_usage():
     now = time.strftime("%c")
     print('\n\nUpdated at %s\n\nGPU utilization: %s %%\nVRAM used: %s %%\n\n%s\n\n' % (
         now, d["gpu_util"], d["mem_used_per"], msg))
+    print(f'Total ram available: {total_memory} MBs')
 
 
 # Input chosen model name
@@ -102,7 +104,7 @@ def process_data_to_model_inputs(batch):
 
 # IMPORTANT SOON
 # only use 32 training examples for notebook - DELETE LINE FOR FULL TRAINING
-train_data = train_data.select(range(32))
+# train_data = train_data.select(range(32))
 
 train_data = train_data.map(
     process_data_to_model_inputs,
@@ -115,7 +117,7 @@ train_data.set_format(
 )
 
 # only use 16 training examples for notebook - DELETE LINE FOR FULL TRAINING
-val_data = val_data.select(range(16))
+# val_data = val_data.select(range(16))
 
 val_data = val_data.map(
     process_data_to_model_inputs,
@@ -190,15 +192,15 @@ training_args = transformers.Seq2SeqTrainingArguments(
     # eval_steps=4,  # set to 8000 for full training
     # warmup_steps=1,  # set to 2000 for full training
     logging_steps=1000,  # set to 1000 for full training
-    save_steps=500,  # set to 500 for full training
+    save_steps=100,  # set to 500 for full training
     eval_steps=16000,  # set to 8000 for full training
     warmup_steps=2000,  # set to 2000 for full training
     evaluation_strategy='steps',
-    # max_steps=16,  # delete for full training
-    # overwrite_output_dir=True,
+    # max_steps=16, # delete for full training
+    overwrite_output_dir=True,
     save_total_limit=3,
     fp16=True,
-    # no_cuda=True
+    no_cuda=True
 )
 
 # instantiate trainer
@@ -209,8 +211,7 @@ trainer = transformers.Seq2SeqTrainer(
     train_dataset=train_data,
     eval_dataset=val_data,
 )
+
 trainer.train()
 
-
 check_gpu_usage()
-

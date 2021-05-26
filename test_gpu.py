@@ -28,11 +28,12 @@ def check_gpu_usage():
     cmd_out = subprocess.check_output(cmd)
     gpu = xml.etree.ElementTree.fromstring(cmd_out).find("gpu")
 
+    total_memory = torch.cuda.get_device_properties(device='cuda').total_memory / 1e6
     util = gpu.find("utilization")
     d["gpu_util"] = extract(util, "gpu_util", "%")
 
     d["mem_used"] = extract(gpu.find("fb_memory_usage"), "used", "MiB")
-    d["mem_used_per"] = d["mem_used"] * 100 / 11171
+    d["mem_used_per"] = d["mem_used"] * 100 / total_memory  # 11171
 
     if d["gpu_util"] < 15 and d["mem_used"] < 2816:
         msg = 'GPU status: Idle \n'
@@ -42,6 +43,7 @@ def check_gpu_usage():
     now = time.strftime("%c")
     print('\n\nUpdated at %s\n\nGPU utilization: %s %%\nVRAM used: %s %%\n\n%s\n\n' % (
         now, d["gpu_util"], d["mem_used_per"], msg))
+    print(f'Total ram available: {total_memory} MBs')
 
 
 check_gpu_usage()
