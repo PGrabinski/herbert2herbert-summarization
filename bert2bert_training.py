@@ -200,7 +200,7 @@ training_args = transformers.Seq2SeqTrainingArguments(
     overwrite_output_dir=True,
     save_total_limit=3,
     fp16=True,
-    no_cuda=True
+    # no_cuda=True
 )
 
 # instantiate trainer
