@@ -104,7 +104,7 @@ def process_data_to_model_inputs(batch):
 
 # IMPORTANT SOON
 # only use 32 training examples for notebook - DELETE LINE FOR FULL TRAINING
-# train_data = train_data.select(range(32))
+train_data = train_data.select(range(320))
 
 train_data = train_data.map(
     process_data_to_model_inputs,
@@ -125,6 +125,7 @@ val_data = val_data.map(
     batch_size=batch_size,
     remove_columns=["article", "highlights", "id"]
 )
+
 val_data.set_format(
     type="torch", columns=["input_ids", "attention_mask", "decoder_input_ids", "decoder_attention_mask", "labels"],
 )
@@ -200,7 +201,8 @@ training_args = transformers.Seq2SeqTrainingArguments(
     overwrite_output_dir=True,
     save_total_limit=3,
     fp16=True,
-    # no_cuda=True
+    # no_cuda=True,
+    # num_train_epochs=
 )
 
 # instantiate trainer
